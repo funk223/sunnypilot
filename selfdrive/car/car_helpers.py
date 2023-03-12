@@ -91,11 +91,11 @@ interfaces = load_interfaces(interface_names)
 
 
 # **** for use live only ****
-def fingerprint(logcan, sendcan):
+def fingerprint(logcan, sendcan, has_relay):
   fixed_fingerprint = os.environ.get('FINGERPRINT', "")
   skip_fw_query = os.environ.get('SKIP_FW_QUERY', False)
 
-  if not fixed_fingerprint and not skip_fw_query:
+  if has_relay and not fixed_fingerprint and not skip_fw_query:
     # Vin query only reliably works thorugh OBDII
     bus = 1
 
@@ -200,8 +200,8 @@ def crash_log2(fingerprints, fw):
       break
 
 
-def get_car(logcan, sendcan):
-  candidate, fingerprints, vin, car_fw, source, exact_match = fingerprint(logcan, sendcan)
+def get_car(logcan, sendcan, has_relay=False):
+  candidate, fingerprints, vin, car_fw, source = fingerprint(logcan, sendcan, has_relay)
 
   if Params().get("CarModel") is not None:
     car_model = Params().get("CarModel")
@@ -221,7 +221,7 @@ def get_car(logcan, sendcan):
   disable_radar = Params().get_bool("DisableRadar")
 
   CarInterface, CarController, CarState = interfaces[candidate]
-  CP = CarInterface.get_params(candidate, fingerprints, car_fw, disable_radar)
+  CP = CarInterface.get_params(candidate, fingerprints, car_fw, has_relay, disable_radar)
   CP.carVin = vin
   CP.carFw = car_fw
   CP.fingerprintSource = source
